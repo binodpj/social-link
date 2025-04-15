@@ -1,22 +1,19 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import MobileMenu from "./MobileMenu";
 import Link from "next/link";
 import { MdHome } from "react-icons/md";
 import { FaUserFriends, FaUserCircle } from "react-icons/fa";
 import { LuCircleFadingPlus } from "react-icons/lu";
-import { IoMdNotifications } from "react-icons/io";
-import { BsChatDotsFill } from "react-icons/bs";
 import { IoSearch } from "react-icons/io5";
-
-import {
-  ClerkLoaded,
-  ClerkLoading,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+//import { signIn, signOut } from "@/lib/auth";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const Navbar = () => {
+  const { data: session } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="h-16 w-full flex items-center justify-between">
       {/* left */}
@@ -59,7 +56,38 @@ const Navbar = () => {
           <MobileMenu />
         </div>
 
-        <div className="hidden md:flex">
+        {session?.user ? (
+          <div className="relative">
+            <div
+              onClick={() => setIsOpen((prev) => !prev)}
+              className="hidden md:flex w-10 h-10 border rounded-full  items-center justify-center bg-gray-700 hover:bg-gray-600 text-white cursor-pointer "
+            >
+              <p className="text-2xl font-semibold">
+                {session?.user?.name?.[0]?.toUpperCase() || "U"}
+              </p>
+            </div>
+            {isOpen && (
+              <button
+                onClick={() => signOut()}
+                className="absolute top-12 right-2 min-w-20 border rounded-xl px-4 py-2 text-sm bg-gray-700 text-white hover:text-black hover:bg-gray-100 cursor-pointer"
+              >
+                Logout
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="hidden md:flex">
+            <button
+              type="button"
+              onClick={() => signIn("google")}
+              className="border rounded-xl px-4 py-2 text-sm bg-gray-700 text-white hover:text-black hover:bg-gray-100 cursor-pointer"
+            >
+              Sign in / Register
+            </button>
+          </div>
+        )}
+
+        {/* <div className="hidden md:flex">
           <ClerkLoading>
             <div
               className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -88,15 +116,12 @@ const Navbar = () => {
             </SignedIn>
 
             <SignedOut>
-              <Link
-                href={"/sign-in"}
-                className="flex gap-1 items-center justify-center text-sm"
-              >
-                <FaUserCircle className="text-lg" /> Login/Register
-              </Link>
+              <div className="flex gap-1 items-center justify-center text-sm">
+                <Link href={"/sign-in"}>Login/Register</Link>
+              </div>
             </SignedOut>
-          </ClerkLoaded>
-        </div>
+          </ClerkLoaded> 
+        </div>*/}
       </div>
     </div>
   );
