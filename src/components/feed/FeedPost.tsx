@@ -1,10 +1,12 @@
 import React from "react";
 
 import Image from "next/image";
-import { IoIosMore } from "react-icons/io";
 import { Post, User } from "../../../prisma/app/generated/prisma/client";
 import PostInteraction from "./PostInteraction";
 import Comments from "./Comments";
+import PostInfo from "./PostInfo";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 type FeedPostType = Post & { user: User } & {
   likes: [{ userId: string }];
@@ -12,8 +14,19 @@ type FeedPostType = Post & { user: User } & {
   _count: { comments: number };
 };
 
-const FeedPost = ({ post }: { post: FeedPostType }) => {
-  console.log(post._count.comments);
+const FeedPost = async ({ post }: { post: FeedPostType }) => {
+  //console.log(post._count.comments);
+
+  const session = await auth();
+
+  if (!session?.user?.email) throw new Error("User is not authenticated!");
+  const user = await prisma.user.findUnique({
+    where: {
+      email: session.user.email,
+    },
+  });
+  const userId = user?.id;
+
   return (
     <div className=" p-4 bg-white shadow-lg rounded-lg flex flex-col gap-2">
       {/* user details */}
@@ -30,7 +43,7 @@ const FeedPost = ({ post }: { post: FeedPostType }) => {
           <span>{post.user.name}</span>
         </div>
 
-        <IoIosMore className="text-gray-500" />
+        {userId === post.user.id && <PostInfo postId={post.id} />}
       </div>
 
       {/* post photo and decs */}
